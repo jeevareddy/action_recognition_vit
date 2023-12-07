@@ -1,0 +1,71 @@
+####################
+#
+# Example Job for HTCondor
+#
+####################
+
+#---------------------------------------------
+# Name your batch so it's easy to distinguish in the q.
+JobBatchName = "Timesformer_HMDB"
+
+# --------------------------------------------
+# Executable
+#executable    = /opt/conda/bin/python
+executable    = $ENV(PWD)/train_and_test.sh
+
+# ---------------------------------------------------
+# Universe (vanilla, docker)
+universe     = docker
+#docker_image = pytorch/pytorch:0.4.1-cuda9-cudnn7-runtime
+#docker_image = pytorch/pytorch:2.0.0-cuda11.7-cudnn8-devel
+docker_image = pytorch/pytorch:latest
+
+# -------------------------------------------------
+# Event, out and error logs
+log    = c$(cluster).p$(process).log
+output = c$(cluster).p$(process).out
+error  = c$(cluster).p$(process).error
+
+# -----------------------------------
+# File Transfer, Input, Output
+#should_transfer_files = YES
+
+# Mount the project spaces containing the Anaconda environments and the code
+# Uncomment this environment line if you're not running on /mnt/fast
+# environment = "mount=$ENV(PWD)"
+
+# -------------------------------------
+# Requirements for the Job (see NvidiaDocker/Example09)
+requirements = (HasStornext) && (CUDACapability >= 6.2)
+
+should_transfer_files   = YES
+transfer_input_files    = $ENV(PWD)/datasets/
+#transfer_output_files   = $ENV(PWD)/logs/
+
+# --------------------------------------
+# Resources
+request_GPUs   = 1
+# this needs to be specified for the AI@Surrey cluster if requesting a GPU
++GPUMem        = 10000  
+request_CPUs   = 4
+request_memory = 16G
+
+#This job will complete in less than 1 hour
++JobRunTime = 3
+
+#This job can checkpoint
++CanCheckpoint = true
+
+# ------------------------------------
+# Request for guaranteed run time. 0 means job is happy to checkpoint and move at any time.
+# This lets Condor remove our job ASAP if a machine needs rebooting. Useful when we can checkpoint and restore
+# Measured in seconds, so it can be changed to match the time it takes for an epoch to run
+MaxJobRetirementTime = 0
+
+# -----------------------------------
+# Queue commands. We can use variables and flags to launch our command with multiple options (as you would from the command line)
+arguments = --PWD $ENV(PWD)
+
+
+queue 1 
+

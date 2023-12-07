@@ -1,0 +1,7 @@
+#pytorch
+scikit-learn
+numpy
+tqdm
+seaborn
+transformers
+einops
